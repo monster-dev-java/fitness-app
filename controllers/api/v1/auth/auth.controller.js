@@ -15,6 +15,7 @@ const {
 exports.register = async (req, res, next) => {
     const { first_name, last_name, username, email, password } = req.body;
 
+    // TODO: need to seperate the validation logic from the controller
     if (!first_name) {
         return sendErrorResponse(res, 422, 'First name is required');
     }
@@ -31,28 +32,29 @@ exports.register = async (req, res, next) => {
         return sendErrorResponse(res, 422, 'Username is required');
     }
 
-    console.log(email);
-    const checkIfUserExists = User.findOne({ "$or": [{ email }, { username }] }).select('email');
 
-    console.log(checkIfUserExists);
+    // TODO: needs to add validation for the username also along with the email.
+    // TODO: needs to add the validation for the email and username exists in the middlewares.
+    User.findOne({ email: email }, function (error, data) {
+        if (!data) {
 
-    if (!checkIfUserExists) {
-        const user = await User.create({
-            first_name,
-            last_name,
-            username,
-            email,
-            password
-        });
+            const user = User.create({
+                first_name,
+                last_name,
+                username,
+                email,
+                password
+            });
 
-        res.status(201).json({
-            success: true,
-            message: 'User registered successfully',
-            user
-        });
-    } else {
-        return sendErrorResponse(res, 422, 'Email or username already exists');
-    }
+            return sendSuccessResponse(res, 201, user, 'User Registered successfully');
+        } else {
+            return sendErrorResponse(res, 422, "Email already exists.")
+        }
+    })
+
+
+
+
 
 
 }
